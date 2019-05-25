@@ -112,6 +112,7 @@ def breadthFirstSearch(problem):
           if not temp_state in explored:
                   explored.append(temp_state)
                   if problem.isGoalState(temp_state):
+                        print("PATH:", path)
                         return path
         
                   for temp_states, action, count in problem.getSuccessors(temp_state):
