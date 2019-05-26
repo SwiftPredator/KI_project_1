@@ -359,7 +359,7 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
-#the corner heuristic gets the unvisited corners and calculates the maze distance to all of the unvisited corners
+#the corner heuristic gets the unvisited corners and calculates the maze distance to all of the unvisited corners. It returns the longest distance between pacman and a unvisited corner.
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -452,7 +452,7 @@ class AStarFoodSearchAgent(SearchAgent):
     def __init__(self):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
-# All in all the same as the cornerheuristic. We look at the heuritsic value for all possible food postions from our current position. 
+# All in all the same as the cornerheuristic. We look at the distance for all possible food postions from our current position. We return the furthest distnace to a possible food.
 def foodHeuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -481,6 +481,11 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
+
+    #first try was to calculate the distance between the furthest two food positions and the distance between pacman and the less furthest of the two food positions. The heuristic failed 
+    # in case of consistency
+
+    #second try looks just at the furthest food from pacmans positions, all to all the same as corners problem. this heuristic is consistency and works fine.
     position, foodGrid = state
     foodGridList = foodGrid.asList()
     value = 0
