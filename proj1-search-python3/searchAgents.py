@@ -359,7 +359,7 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
-
+#the corner heuristic gets the unvisited corners and calculates the maze distance to all of the unvisited corners
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -377,19 +377,19 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
     
     cPos, rCorners = state
-    unvistedCorners = []
+    unvisitedCorners = []
     #find unvisted corners
     for corner in corners:
         if corner not in rCorners:
-            unvistedCorners.append(corner)
-    #use maze distance to calculate cost
-    cost = 0
-    for corner in unvistedCorners:
-        c_cost = mazeDistance(cPos, corner, problem.startProblem)
-        if c_cost > cost:
-            cost = c_cost
+            unvisitedCorners.append(corner)
+    #use maze distance to calculate value
+    value = 0
+    for corner in unvisitedCorners:
+        c_value = mazeDistance(cPos, corner, problem.startProblem)
+        if c_value > value:
+            value = c_value
 
-    return cost # Default to trivial solution
+    return value # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -412,7 +412,7 @@ class FoodSearchProblem:
         self.startingGameState = startingGameState
         self._expanded = 0 # DO NOT CHANGE
         self.heuristicInfo = {} # A dictionary for the heuristic to store information
-
+    
     def getStartState(self):
         return self.start
 
@@ -452,7 +452,7 @@ class AStarFoodSearchAgent(SearchAgent):
     def __init__(self):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
-
+# All in all the same as the cornerheuristic. We look at the heuritsic value for all possible food postions from our current position. 
 def foodHeuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -482,8 +482,13 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    foodGridList = foodGrid.asList()
+    value = 0
+    for foodPos in foodGridList:
+        cValue = mazeDistance(position, foodPos, problem.startingGameState)
+        if cValue > value:
+            value = cValue
+    return value
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
