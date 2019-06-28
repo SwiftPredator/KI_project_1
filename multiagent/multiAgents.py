@@ -111,10 +111,10 @@ class ReflexAgent(Agent):
             dist_capsule = temp_dist
 
         #evaluation
-        score_nextFood = 0;
-        score_nextCapsule = 0;
-        score_nextAGhost = 0;
-        score_nextPGhost = 0;
+        score_nextFood = 0
+        score_nextCapsule = 0
+        score_nextAGhost = 0
+        score_nextPGhost = 0
         if len(foodList)<len(realFoodList):
             score_nextFood = 10
 
@@ -122,14 +122,14 @@ class ReflexAgent(Agent):
             score_nextCapsule = 20
 
         if(dist_aGhost < 3):
-            print("GHOST NEAR")
+            #print("GHOST NEAR")
             score_nextAGhost = -100
         else:
             score_nextAGhost = 5
-        
+        #with the information we can compute a score
         score = score_nextFood + score_nextAGhost + score_nextPGhost + score_nextCapsule + (1/distanceToNextFood) + (1/dist_capsule)
-        #with this information we can compute a score
-        print("stats: ", score)
+        
+        #print("stats: ", score)
         return score
 
 def scoreEvaluationFunction(currentGameState):
@@ -166,6 +166,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (question 2)
     """
+    
+
+        
 
     def getAction(self, gameState):
         """
@@ -190,8 +193,39 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def minimax_max(state, depth, player=0):
+            if(state.isWin() or state.isLose() or depth == 0):
+                return self.evaluationFunction(state), Directions.STOP
+            actions = state.getLegalActions(player)
+            pos_scores = []
+            for action in actions:
+                pos_scores.append(minimax_min(state.generateSuccessor(player, action), depth - 1, 1))
+            maxScore = max(pos_scores)
+            #print(maxScore, actions[pos_scores.index(max(pos_scores))])
+            return maxScore, actions[pos_scores.index(max(pos_scores))]
+
+        def minimax_min(state, depth, player=1):
+            if(state.isWin() or state.isLose() or depth == 0):
+                #print("depth:", depth)
+                return self.evaluationFunction(state)
+            actions = state.getLegalActions(player)
+            pos_scores = []
+            for action in actions:
+                #check if last agent, so its pacmans turn.
+                if(player == state.getNumAgents() - 1):
+                    pos_scores.append(minimax_max(state.generateSuccessor(player, action), depth - 1, 0)[0])
+                else:
+                    pos_scores.append(minimax_min(state.generateSuccessor(player, action), depth, player + 1))
+            
+            minScore = min(pos_scores)
+            
+            return minScore
+
+
+        print(self.depth)
+        return minimax_max(gameState, self.depth*2, 0)[1]
+        
+      
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -202,8 +236,44 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxABT(state, depth, alpha, beta, player=0):
+            if(state.isWin() or state.isLose() or depth == 0):
+                return self.evaluationFunction(state), Directions.STOP
+            actions = state.getLegalActions(player)
+            pos_score = 0
+            highest_score = float("-inf")
+            best_action = Directions.STOP
+            for action in actions:
+                pos_score = minABT(state.generateSuccessor(player, action), depth - 1, alpha, beta, 1)
+                if(pos_score > highest_score):
+                    highest_score = pos_score
+                    best_action = action
+                alpha = max(alpha, highest_score)
+                if(highest_score > beta):
+                    return pos_score, action 
+            return highest_score, best_action
+
+        def minABT(state, depth, alpha, beta, player=1):
+            if(state.isWin() or state.isLose() or depth == 0):
+                return self.evaluationFunction(state)
+            actions = state.getLegalActions(player)
+            pos_score =  0
+            lowest_score = float("inf")
+            for action in actions:
+                if(player == state.getNumAgents() -1):
+                    pos_score = maxABT(state.generateSuccessor(player, action), depth - 1, alpha, beta, 0)[0]
+                else:
+                    pos_score = minABT(state.generateSuccessor(player, action), depth, alpha, beta, player + 1)
+                if(pos_score < lowest_score):
+                    lowest_score = pos_score
+                beta = min(beta, lowest_score)
+                if(lowest_score < alpha):
+                    return lowest_score
+            return lowest_score
+                    
+
+        return maxABT(gameState, self.depth*2, float("-inf"), float("inf"), 0)[1]
+        
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -217,8 +287,45 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def value(state, depth, player=0):
+            if(state.isWin() or state.isLose() or depth == 0):
+                return self.evaluationFunction(state), Directions.STOP
+            elif player == 0:
+                return maxABT(state, depth, player)
+            else:
+                return minABT(state, depth, player)
+
+        def maxABT(state, depth, player=0):
+            if(state.isWin() or state.isLose() or depth == 0):
+                return self.evaluationFunction(state), Directions.STOP
+            actions = state.getLegalActions(player)
+            pos_score = 0
+            highest_score = float("-inf")
+            best_action = Directions.STOP
+            for action in actions:
+                pos_score = value(state.generateSuccessor(player, action), depth - 1, 1)[0]
+                if(pos_score > highest_score):
+                    highest_score = pos_score
+                    best_action = action
+            return highest_score, best_action
+
+        def minABT(state, depth, player=1):
+            if(state.isLose() or depth == 0):
+                return self.evaluationFunction(state), Directions.STOP
+            actions = state.getLegalActions(player)
+            pos_score =  0
+            score = 0
+            for action in actions:
+                if(player == state.getNumAgents() -1):
+                    pos_score = value(state.generateSuccessor(player, action), depth - 1, 0)[0]
+                else:
+                    pos_score = value(state.generateSuccessor(player, action), depth, player + 1)[0]
+                p = 1/len(actions)
+                score += p*pos_score
+            return score, Directions.STOP
+                    
+
+        return value(gameState, self.depth*2, 0)[1]
 
 def betterEvaluationFunction(currentGameState):
     """
